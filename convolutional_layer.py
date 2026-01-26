@@ -2,19 +2,30 @@ import numpy as np
 from scipy import signal
 import copy
 
-# each layer should take an input(m by n by dLdZ), number of filters, and the size of those filters
+# each filter contains d many kernels
+# using this as a guide: https://learnopencv.com/understanding-convolutional-neural-networks-cnn/
+
 np.random.seed(6)
 
 
 class Conv_Layer:
-  def __init__(self, input_size, f_num, f_size):
+  def __init__(self, input_size, kernel_size, filter_num, stride = 1, padding = None):
     self.d, self.m, self.n = input_size # defining the depth and number of rows and columns of the input. The depth of the filters is d as well
-    self.f_num = f_num # number of filters, corresponds to depth of output
-    self.f_d, self.f_m, self.f_n = f_size # defining number of rows and columns in a filter
-    self.out_m = self.m - self.f_m + 1 # using formula to get the size of the output
-    self.out_n = self.n - self.f_n + 1
+    self.f_num = filter_num
+    self.k_m, self.k_n = kernel_size # defining number of rows and columns in a filter
+    
+    if (padding == None): # assuming the kernel size is odd :/
+      padding = (int)(self.k_n / 2)
+    self.padding = padding
+    
+    self.stride = stride
+
+    self.out_m = ((self.m + 2 * self.padding - self.k_m) / self.stride) + 1 # using formula to get the size of the output
+    self.out_n = ((self.n + 2 * self.padding - self.k_n) / self.stride) + 1 
+    
+    
     self.out = np.zeros((self.f_num, self.out_m, self.out_n))
-    self.filters = np.random.randn(self.f_num, self.d, self.f_m, self.f_n) # randomizing filters and biases
+    self.filters = np.random.randn(self.f_num, self.d, self.k_m, self.k_n) # randomizing filters and biases
     self.bias = np.random.randn(self.f_num, self.out_m, self.out_n)
     print(self.bias)
     #print("bias", self.bias, self.f_num, self.out_m, self.out_n)
