@@ -31,14 +31,25 @@ class Conv_Layer:
     #print("bias", self.bias, self.f_num, self.out_m, self.out_n)
     #print("filters", self.filters, np.shape(self.filters))
 
-  def forward(self, input):
-    self.input = input
-    #print("shape", np.shape(input))
+  def forward(self, input: np.ndarray):
+
+    # padding the input
+    padded_input = np.zeros(self.m + self.padding, self.n + self.padding)
+    padded_input[(self.padding):(self.padding + self.m + 1), (self.padding):(self.padding + self.n + 1)] = input
+
+
     self.out = copy.deepcopy(self.bias) # makes adding everything with the bias easier
     for i in range(self.f_num): # for each filter or each output
-      for j in range(self.d): # for each layer of the input
-        self.out[i] += signal.correlate2d(self.input[j], self.filters[i, j], "valid")
+      self.out[i] += self.convolve(input, self.filters[i], self.stride)
     return self.out
+
+  # input is a d * m * n array, filter is d * k_m * k_n
+  def convolve(self, input: np.ndarray, filter: np.ndarray, stride: int):
+    convolve_out = np.zeros(self.m, self.n) # no support for higher dimensions, shouldn't need to be any
+    for i in range(0, self.m - self.k_m, stride): # subtracting kernel dimension to keep in bounds
+      for j in range(0, self.n  - self.k_n, stride):
+        convolve_out[i, j] = np.sum(input[:, (i):(i + self.k_m), (j):(j + self.k_n)] * filter)
+    return convolve_out
 
   def backward(self, dLdZ, l_rate=.01): # should return the partial derivative of the loss with respect to the input to the layer, kernels/filters, and the biases(not using automatic differentiation)
     self.dLdZ = dLdZ
