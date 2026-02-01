@@ -1,8 +1,5 @@
 import numpy as np
 
-# if you dont get any of the derivation, dont worry i dont really get them either.
-# go to https://openlearninglibrary.mit.edu/courses/course-v1:MITx+6.036+1T2019/courseware/Week7/week7_homework/?activate_block_id=block-v1%3AMITx%2B6.036%2B1T2019%2Btype%40sequential%2Bblock%40week7_homework
-
 np.random.seed(6)
 
 x = np.array([[1, 2, 3, 2.5],
