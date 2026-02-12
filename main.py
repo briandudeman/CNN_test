@@ -10,6 +10,7 @@ import copy
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.datasets import mnist
 import matplotlib.pyplot as plt
+#test
 
 # TODO:
 # - make it work
