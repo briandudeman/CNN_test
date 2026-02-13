@@ -1,13 +1,15 @@
 import numpy as np
+import math
 
+from layer import Layer
 
-class Reshape: # reshaping for fc layers
-    def __init__(self, input_shape, output_shape):
-        self.input_shape = input_shape
-        self.output_shape = output_shape
+class Reshape(Layer): # reshaping for fc layers
 
     def forward(self, input):
-        return np.reshape(input, self.output_shape)
+        self.input_shape = input.shape
+        batch_size = input.shape[0]
+        input_shape_batch_accounted = input.shape[1: ]
+        return np.reshape(input, (batch_size, math.prod(input_shape_batch_accounted), 1))
 
     def backward(self, output):
         return np.reshape(output, self.input_shape)

@@ -1,10 +1,12 @@
 import numpy as np
 
-class ReLU:
+from layer import Layer
+
+class ReLu(Layer):
 
   def forward(self, z):
     self.z = z
-    return np.maximum(-0.1*self.z, self.z) # leaky relu
+    return np.where(self.z >= 0, self.z, -0.1*self.z) # leaky relu
 
   def backward(self, dLdA):
     self.dLdA = dLdA
