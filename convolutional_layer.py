@@ -15,6 +15,8 @@ class ConvLayer(Layer):
     if kernel_size % 2 == 0:
       raise NotImplementedError("Even sized kernels have not been implemented due to asymmetries, please change your kernel size.")
     
+    self.called_first_time = False
+    
     self.f_num = filter_num
     self.kernel_size = kernel_size
 
@@ -34,11 +36,13 @@ class ConvLayer(Layer):
     self.out_m = (int)((self.m + 2 * self.padding - self.kernel_size) / self.stride) + 1 # using formula to get the size of the output
     self.out_n = (int)((self.n + 2 * self.padding - self.kernel_size) / self.stride) + 1 
     
-    self.x_limit = math.sqrt((2 / (self.n + self.m)))      
 
     self.out = np.zeros((self.p, self.f_num, self.out_m, self.out_n))
-    self.filters = np.random.uniform(-self.x_limit, self.x_limit, size=(self.f_num, self.d, self.kernel_size, self.kernel_size)) # randomizing filters and biases
-    self.bias = np.random.uniform(-self.x_limit, self.x_limit, size=(self.f_num, self.out_m, self.out_n))
+    if not self.called_first_time:
+      self.called_first_time = True
+      self.x_limit = math.sqrt((2 / (self.n + self.m)))      
+      self.filters = np.random.uniform(-self.x_limit, self.x_limit, size=(self.f_num, self.d, self.kernel_size, self.kernel_size)) # randomizing filters and biases
+      self.bias = np.random.uniform(-self.x_limit, self.x_limit, size=(self.f_num, self.out_m, self.out_n))
     
 
     for k in range(self.p): # batch size
