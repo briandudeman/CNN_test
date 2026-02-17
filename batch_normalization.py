@@ -5,13 +5,18 @@ from layer import Layer
 
 class BatchNormalization(Layer):
 
+    def __init__(self):
+        self.first_time_called = False
+
     def forward(self, input, epsilon=.0001):
         self.input = input
         self.epsilon = epsilon
         
-        self.x_limit = math.sqrt((2 / sum(input.shape[1:])))      
-        self.gamma = np.random.uniform(-self.x_limit, self.x_limit, size=self.input.shape)
-        self.beta = np.random.uniform(-self.x_limit, self.x_limit, size=self.input.shape)
+        if not self.first_time_called:
+            self.first_time_called = True
+            self.x_limit = math.sqrt((2 / sum(input.shape[1:])))      
+            self.gamma = np.random.uniform(-self.x_limit, self.x_limit, size=self.input.shape)
+            self.beta = np.random.uniform(-self.x_limit, self.x_limit, size=self.input.shape)
 
 
         self.mean = np.average(input, axis=0)
@@ -32,6 +37,11 @@ class BatchNormalization(Layer):
         self.dLdMu = np.multiply(dLdZ, (-self.gamma / np.sqrt(self.variance + self.epsilon))) + self.dLdVar * (-2 / self.input.shape[0]) * np.sum(self.input - self.mean, axis=0)
         self.dLdXhat = np.multiply(dLdZ, self.gamma)
 
+        print("mean", self.mean[:2])
+        print("epsilon", self.epsilon)
+        print("dLdVar", self.dLdVar[:2])
+        print("dLdMu", self.dLdMu[:2])
+        print("dLdXhat", self.dLdXhat[:2])
         self.dLdX = self.dLdXhat * (1 / np.sqrt(self.mean + self.epsilon)) + self.dLdVar * ((2 * (self.input - self.mean)) / self.input.shape[0]) + self.dLdMu * (1 / self.input.shape[0])
 
         return self.dLdX

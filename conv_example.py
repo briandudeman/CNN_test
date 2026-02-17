@@ -12,7 +12,7 @@ from relu import ReLu
 from reshape import Reshape
 from dense import FCLayer
 from softmax import SoftMax
-from loss import Loss
+from loss import CrossEntropy
 from batch_normalization import BatchNormalization
 
 
@@ -31,8 +31,8 @@ def process(x, y, limit, num_classes):
     return x, y
 
 
-x_train, y_train = process(x_train, y_train, 20000, 10)
-x_test, y_test = process(x_test, y_test, 10000, 10)
+x_train, y_train = process(x_train, y_train, 32, 10)
+x_test, y_test = process(x_test, y_test, 32, 10)
 
 def make_mini_batches(x, y, batch_size):
     mini_batches = []
@@ -70,15 +70,17 @@ layers = [ConvLayer(5, 16),
 
 losses = []
 
-for i in range(len(mini_batches)):    
+
+for i in range(len(mini_batches)):
+    print(i, " out of ", len(mini_batches))
     input = np.array(mini_batches[i][0])
     for j, layer in enumerate(layers):
-        #print("layer ", j, " ", layer, " shape ", input.shape)
+        print("layer ", j, " ", layer, " shape ", input.shape)
         input = layer.forward(input)
     
     #print("ytrain: ", y_train[i].shape)
     #print("y: ", input.shape)
-    loss = Loss(np.array(mini_batches[i][1]))
+    loss = CrossEntropy(np.array(mini_batches[i][1]))
 
     #print("error", loss.cross_entropy(input))
     losses.append(loss.cross_entropy(input))
@@ -93,7 +95,7 @@ actuals = []
 right_guesses = 0
 for i in range(x_test.shape[0]):    
     input = np.reshape(x_test[i, :, :, :], (1, x_test[i, :, :, :].shape[0], x_test[i, :, :, :].shape[1], x_test[i, :, :, :].shape[2]))
-    #print(input.shape)
+    print(input.shape)
     for j, layer in enumerate(layers):
         #print("layer ", j, " shape ", input.shape)
         input = layer.forward(input)
@@ -105,13 +107,15 @@ for i in range(x_test.shape[0]):
         right_guesses += 1
     #print("ytrain: ", y_train[i].shape)
     #print("y: ", input.shape)
-    #print(y_test[i].shape)
-    loss = Loss(np.reshape(y_test[i], y_test[i].shape + (1,)))
+    print("y_test", y_test[i].shape)
+    loss = CrossEntropy(np.reshape(y_test[i], (1, ) + y_test[i].shape + (1,)))
 
     #print("error", loss.cross_entropy(input))
+    print("input loss shape", input.shape)
     epoch_loss = loss.cross_entropy(input)
 
 print("acc: ", right_guesses / x_test.shape[0])
 
+print(losses)
 plt.plot(losses)
 plt.show()
