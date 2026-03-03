@@ -8,7 +8,7 @@ class ReLu(Layer):
     self.z = z
     return np.where(self.z >= 0, self.z, -0.1*self.z) # leaky relu
 
-  def backward(self, dLdA):
+  def backward(self, dLdA, lr=0.01):
     self.dLdA = dLdA
     return np.where(dLdA >= 0, dLdA, -0.1*dLdA)
 

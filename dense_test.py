@@ -1,11 +1,14 @@
+from model import Model
 import numpy as np
 import seaborn as sns
 import pandas as pd
 
 import dense
+from optimizers.adam import Adam
 import relu
 import loss
 from batch_normalization import BatchNormalization
+from utils import training
 
 import sklearn.datasets as dt
 
@@ -21,18 +24,32 @@ california_housing = fetch_california_housing(as_frame=True)
 X, Y = data["data"], data["target"]
 X_train,X_test,Y_train,Y_test = train_test_split(X, Y, test_size = 0.2)
 
+x_train_mean = X_train.mean(axis=0)
+x_train_mean = x_train_mean.reshape((x_train_mean.shape + (1,))).reshape((1, -1))
+
+x_train_std = X_train.std(axis=0) + 1e-8
+x_train_std = x_train_std.reshape((x_train_std.shape + (1,))).reshape((1, -1))
+
+y_train_mean = Y_train.mean(axis=0)
+y_train_mean = y_train_mean.reshape((y_train_mean.shape + (1,))).reshape((1, -1))
+
+y_train_std = Y_train.std(axis=0) + 1e-8
+y_train_std = y_train_std.reshape((y_train_std.shape + (1,))).reshape((1, -1))
+
+learning_rate = 1e-6  # adjust downward if loss starts climbing after a while
+
 med_income_train = X_train[:, 0]
 med_income_test = X_test[:, 0]
 house_age_train = X_train[:, 1]
 house_age_test = X_test[:, 1]
 
-y_train_shaped = np.reshape(Y_train, (Y_train.shape[0], 1))
+Y_train = np.reshape(Y_train, (Y_train.shape[0], 1))
 #-----------------------------------------------------------------------------------------------------------------------
 
 
 #-------------------------------------------------Declaring Network------------------------------------------------------
 
-network = [
+network = Model([
     dense.FCLayer(50),
     relu.ReLu(),
     dense.FCLayer(100),
@@ -40,77 +57,61 @@ network = [
     dense.FCLayer(100),
     relu.ReLu(),
     dense.FCLayer(1),
-]
+], Adam)
 
 final_loss = loss.Mse()
 
-e = 100
+epochs = 200
+mini_batch_size = 32
 losses = []
-#-----------------------------------------------------------------------------------------------------------------------
 
-#-----------------------------------------------------Functions---------------------------------------------------------
+#--------------------------------------------------Preprocessing Data-------------------------------------------------------
 
+X_train = training.standardize(X_train, x_train_mean, x_train_std).reshape((X_train.shape + (1,)))
+Y_train = training.standardize(Y_train, y_train_mean, y_train_std).reshape((Y_train.shape + (1,)))
 
-
-def make_mini_batches(x, y, batch_size):
-    mini_batches = []
-    data = [(x[i], y[i]) for i in range(x.shape[0])]
-    np.random.shuffle(data)
-    for i in range((len(data) // batch_size)):
-        mini_batch = data[i * batch_size:(i + 1) * batch_size]
-        X_mini = [mini_batch[j][0] for j in range(len(mini_batch))]
-        Y_mini = [mini_batch[j][1] for j in range(len(mini_batch))]
-        mini_batches.append((X_mini, Y_mini))
-    return mini_batches
-
-mini_batches = make_mini_batches(X_train, y_train_shaped, 1)
-
-
-def predict(network, input):
-    output = input
-    for layer in network:
-        output = layer.forward(output)
-    return output
-
-
-def standardize(data):  # for standardizing either the input or output of the network. not used in the current model
-    mean = np.sum(data)/np.size(data)
-    sd = math.sqrt(np.sum(np.square(data-mean))/np.size(data))
-    return (data-mean)/sd
+X_test = training.standardize(X_test, x_train_mean, x_train_std).reshape((X_test.shape + (1,)))
+Y_test = Y_test.reshape(Y_test.shape + (1,1))
 #-----------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------Training Model-------------------------------------------------------
+for e in range(epochs):
+    # shuffle / rebuild mini‑batches each epoch
+    mini_batches = training.make_mini_batches(X_train, Y_train, mini_batch_size)
+    epoch_losses = []
+    print(f"epoch {e+1}/{epochs}")
 
-for i in range(len(mini_batches)):
-    print("epoch: ", i)
-    error = 0
-    x_train_batch = np.array(mini_batches[i][0]).reshape(np.array(mini_batches[i][0]).shape + (1, ))
-    y_train_batch = np.array(mini_batches[i][1]).reshape(np.array(mini_batches[i][1]).shape + (1, ))
-    #print("x batch shape: ", x_train_batch.shape)
-    #print("y batch shape: ", y_train_batch.shape)
-    print("x_batch standardized: ", standardize(x_train_batch))
-    output = predict(network, standardize(x_train_batch)) # forward propagation
-    print("output", output)
-    print("y actual", y_train_batch)
-    error += final_loss.mse(output, y_train_batch) # error computation, currently not used
-    losses.append(final_loss.root_mse(output, y_train_batch))
+    for x_batch, y_batch in mini_batches:
+        # batches already standardized in make_mini_batches
+        output = training.predict(x_batch)
+        batch_loss = final_loss.mse(output, y_batch)
+        epoch_losses.append(batch_loss)
 
-    # backpropagation
-    grad = final_loss.mse_prime(output, y_train_batch)
-    print("grad: ", grad)
-    for layer in reversed(network):
-        grad = layer.backward(grad)
+        grad = final_loss.mse_prime(output, y_batch)
+        for layer in reversed(network):
+            grad = layer.backward(grad, lr=learning_rate)
+
+    avg = np.mean(epoch_losses)
+    losses.append(avg)
+    if (e+1) % 10 == 0 or e == 0:
+        print(f"  avg mse {avg:.4f}")
 
 #-----------------------------------------------------------------------------------------------------------------------
 
 #----------------------------------------------Plotting Data----------------------------------------------------------
-prediction = predict(network, standardize(X_train.reshape(X_train.shape + (1, ))))# getting final prediction
-training_loss = final_loss.root_mse(prediction, Y_train.reshape(Y_train.shape + (1,1)))
-prediction_test = predict(network, standardize(X_test.reshape(X_test.shape + (1, ))))
-test_loss = final_loss.root_mse(prediction_test, Y_test.reshape(Y_test.shape + (1,1)))
+# evaluate on original scale
+prediction = training.predict(network, X_train)
+prediction = training.destandardize(prediction, y_train_mean, y_train_std)
+training_loss = final_loss.root_mse(prediction, Y_train)
+
+prediction_test = training.predict(network, X_test)
+prediction_test = training.destandardize(prediction_test, y_train_mean, y_train_std)
+test_loss = final_loss.root_mse(prediction_test, Y_test)
+
 print("training loss", training_loss)
 print("test loss", test_loss)
-print(prediction[:5])
+print("avg pred", prediction.mean(), "avg target", Y_train.mean())
+print(prediction[:5].flatten())
 print(Y_train[:5])
 
 plt.figure()
@@ -121,7 +122,7 @@ plt.plot(losses)  # losses
 
 plt.figure()
 scatter_data = np.vstack((X_train[:, 6], X_train[:, 7]))
-scatter_data = np.vstack((prediction.reshape((prediction.shape[0], prediction.shape[1])).T, scatter_data))
+scatter_data = np.vstack((prediction, scatter_data))
 scatter_data = pd.DataFrame(scatter_data.T, index=None, columns=["preds", "Latitude", "Longitude"])
 
 sns.scatterplot(

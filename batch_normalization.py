@@ -9,14 +9,15 @@ class BatchNormalization(Layer):
         self.first_time_called = False
 
     def forward(self, input, epsilon=.0001):
+        #print("batch norm input shape", input.shape)
         self.input = input
         self.epsilon = epsilon
         
         if not self.first_time_called:
             self.first_time_called = True
             self.x_limit = math.sqrt((2 / sum(input.shape[1:])))      
-            self.gamma = np.random.uniform(-self.x_limit, self.x_limit, size=self.input.shape)
-            self.beta = np.random.uniform(-self.x_limit, self.x_limit, size=self.input.shape)
+            self.gamma = np.random.uniform(-self.x_limit, self.x_limit, size=self.input.shape[1:])
+            self.beta = np.random.uniform(-self.x_limit, self.x_limit, size=self.input.shape[1:])
 
 
         self.mean = np.average(input, axis=0)
@@ -30,19 +31,19 @@ class BatchNormalization(Layer):
 
     def backward(self, dLdZ):
         self.dLdX = np.zeros(self.input.shape)
-        self.dLdG = np.multiply(self.normalized, dLdZ)
-        self.dLdB = dLdZ.copy()
+        self.dLdG = np.sum(np.multiply(self.normalized, dLdZ), axis=0)
+        self.dLdB = np.sum(dLdZ, axis=0)
 
-        self.dLdVar = np.multiply(dLdZ, self.input - self.mean) * ((-self.gamma / 2) * (self.variance + self.epsilon)**(-3/2))
-        self.dLdMu = np.multiply(dLdZ, (-self.gamma / np.sqrt(self.variance + self.epsilon))) + self.dLdVar * (-2 / self.input.shape[0]) * np.sum(self.input - self.mean, axis=0)
+        self.dXhatdVar = -(self.input - self.mean) / (2 * (self.variance + self.epsilon)**(3/2))
+        self.dXhatdMu = (-1. / np.sqrt(self.variance + self.epsilon))
         self.dLdXhat = np.multiply(dLdZ, self.gamma)
 
-        print("mean", self.mean[:2])
-        print("epsilon", self.epsilon)
-        print("dLdVar", self.dLdVar[:2])
-        print("dLdMu", self.dLdMu[:2])
-        print("dLdXhat", self.dLdXhat[:2])
-        self.dLdX = self.dLdXhat * (1 / np.sqrt(self.mean + self.epsilon)) + self.dLdVar * ((2 * (self.input - self.mean)) / self.input.shape[0]) + self.dLdMu * (1 / self.input.shape[0])
+        #print("mean", self.mean[:2])
+        #print("epsilon", self.epsilon)
+        #print("dLdVar", self.dXhatdVar[:2])
+        #print("dLdMu", self.dXhatdMu[:2])
+        #print("dLdXhat", self.dLdXhat[:2])
+        self.dLdX = self.dLdXhat * ((1 / np.sqrt(self.variance + self.epsilon)) + self.dXhatdVar * ((2. * (self.input - self.mean)) / np.prod(self.mean.shape)) + self.dXhatdMu * (1. / np.prod(self.mean.shape)))
 
         return self.dLdX
 
