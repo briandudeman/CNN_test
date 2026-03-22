@@ -1,13 +1,20 @@
 
 
-from layer import Layer
+from layers.layer import Layer
+from layers.weight_layer import WeightLayer
 from optimizers.base_optimizer import BaseOptimizer
 
 
+import copy
+
+
 class Model:
-    def __init__(self, layers: list[Layer], optimizer: BaseOptimizer):
+    def __init__(self, layers: list[Layer], optimizer: BaseOptimizer, *optimizer_args):
         self.layers = layers
-        self.optimizer = optimizer
+        self.optimizer_type = optimizer
+        for layer in self.layers:
+            if isinstance(layer, WeightLayer):
+                layer.set_optimizer(self.optimizer_type, *optimizer_args)
     
     def predict(self, input):
         output = input
@@ -16,7 +23,7 @@ class Model:
             output = layer.forward(output)
         return output
 
-    def backprop(self, grad):
+    def backprop(self, grad, epoch):
         for layer in reversed(self.layers):
-            grad = layer.backward(grad, lr=self.optimizer.lr)
+            grad = layer.backward(grad, epoch, lr=layer.lr)
         

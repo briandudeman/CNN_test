@@ -12,6 +12,7 @@ class MaxPoolingLayer(Layer):
     self.stride = kernel_size
     if (stride):
       self.stride = stride
+    super().__init__()
     
 
   def forward(self, input):

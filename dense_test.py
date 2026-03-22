@@ -3,11 +3,11 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 
-import dense
+import layers.dense as dense
 from optimizers.adam import Adam
-import relu
+import layers.relu as relu
 import loss
-from batch_normalization import BatchNormalization
+from layers.batch_normalization import BatchNormalization
 from utils import training
 
 import sklearn.datasets as dt
@@ -57,11 +57,11 @@ network = Model([
     dense.FCLayer(100),
     relu.ReLu(),
     dense.FCLayer(1),
-], Adam)
+], Adam, 1e-5)
 
 final_loss = loss.Mse()
 
-epochs = 200
+epochs = 1000
 mini_batch_size = 32
 losses = []
 
@@ -83,13 +83,12 @@ for e in range(epochs):
 
     for x_batch, y_batch in mini_batches:
         # batches already standardized in make_mini_batches
-        output = training.predict(x_batch)
+        output = network.predict(x_batch)
         batch_loss = final_loss.mse(output, y_batch)
         epoch_losses.append(batch_loss)
 
         grad = final_loss.mse_prime(output, y_batch)
-        for layer in reversed(network):
-            grad = layer.backward(grad, lr=learning_rate)
+        network.backprop(grad, e+1)
 
     avg = np.mean(epoch_losses)
     losses.append(avg)
@@ -100,11 +99,11 @@ for e in range(epochs):
 
 #----------------------------------------------Plotting Data----------------------------------------------------------
 # evaluate on original scale
-prediction = training.predict(network, X_train)
+prediction = network.predict(X_train)
 prediction = training.destandardize(prediction, y_train_mean, y_train_std)
 training_loss = final_loss.root_mse(prediction, Y_train)
 
-prediction_test = training.predict(network, X_test)
+prediction_test = network.predict(X_test)
 prediction_test = training.destandardize(prediction_test, y_train_mean, y_train_std)
 test_loss = final_loss.root_mse(prediction_test, Y_test)
 
@@ -121,16 +120,16 @@ plt.ylabel("losses")
 plt.plot(losses)  # losses
 
 plt.figure()
-scatter_data = np.vstack((X_train[:, 6], X_train[:, 7]))
-scatter_data = np.vstack((prediction, scatter_data))
-scatter_data = pd.DataFrame(scatter_data.T, index=None, columns=["preds", "Latitude", "Longitude"])
+
+scatter_data = np.hstack((X_train[:, 6], X_train[:, 7]))
+scatter_data = np.hstack((prediction.reshape(prediction.shape[0], 1), scatter_data))
+scatter_data = pd.DataFrame(scatter_data, index=None, columns=["preds", "Latitude", "Longitude"])
 
 sns.scatterplot(
     data=scatter_data,
     x="Longitude",
     y="Latitude",
     hue="preds",
-    palette="viridis",
     alpha=0.5,
 )
 plt.legend(title="MedHouseVal", bbox_to_anchor=(1.05, 0.95), loc="upper left")

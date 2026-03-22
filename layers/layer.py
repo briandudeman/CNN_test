@@ -3,7 +3,7 @@
 # TODO: make abstract
 class Layer:
     def __init__(self):
-        pass
+        self.lr = .0001
 
     def forward(self):
         pass

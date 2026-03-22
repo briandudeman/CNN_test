@@ -1,7 +1,7 @@
 import numpy as np
 import copy, math
 
-from layer import Layer
+from weight_layer import WeightLayer
 
 # each filter contains d many kernels
 # using this as a guide: https://learnopencv.com/understanding-convolutional-neural-networks-cnn/
@@ -9,7 +9,7 @@ from layer import Layer
 np.random.seed(6)
 
 
-class ConvLayer(Layer):
+class ConvLayer(WeightLayer):
   def __init__(self, kernel_size: int, filter_num: int, stride = 1, padding = None):
     
     if kernel_size % 2 == 0:
