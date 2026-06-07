@@ -2,13 +2,10 @@ from model import Model
 import numpy as np
 import seaborn as sns
 import pandas as pd
+import tensorflow as tf
+import keras
 import time
 
-import layers.python_layers.dense as dense
-from optimizers.python_optimizers.adam import Adam
-import layers.python_layers.relu as relu
-import loss
-from layers.python_layers.batch_normalization import BatchNormalization
 from utils import training
 
 import sklearn.datasets as dt
@@ -50,17 +47,16 @@ Y_train = np.reshape(Y_train, (Y_train.shape[0], 1))
 
 #-------------------------------------------------Declaring Network------------------------------------------------------
 
-network = Model([
-    dense.FCLayer(50),
-    relu.ReLu(),
-    dense.FCLayer(100),
-    relu.ReLu(),
-    dense.FCLayer(100),
-    relu.ReLu(),
-    dense.FCLayer(1),
-], Adam, 1e-5)
 
-final_loss = loss.Mse()
+model = tf.keras.models.Sequential([
+  tf.keras.layers.Dense(50, activation='relu'),
+  tf.keras.layers.Dense(100, activation='relu'),
+  tf.keras.layers.Dense(100, activation='relu'),
+  tf.keras.layers.Dense(1)
+])
+
+model.compile(optimizer='adam', loss='mse') 
+
 
 epochs = 1000
 mini_batch_size = 32
@@ -68,39 +64,24 @@ losses = []
 
 #--------------------------------------------------Preprocessing Data-------------------------------------------------------
 
-X_train = training.standardize(X_train, x_train_mean, x_train_std).reshape((X_train.shape + (1,)))
-Y_train = training.standardize(Y_train, y_train_mean, y_train_std).reshape((Y_train.shape + (1,)))
+X_train = training.standardize(X_train, x_train_mean, x_train_std)
+Y_train = training.standardize(Y_train, y_train_mean, y_train_std)
 
-X_test = training.standardize(X_test, x_train_mean, x_train_std).reshape((X_test.shape + (1,)))
-Y_test = Y_test.reshape(Y_test.shape + (1,1))
+X_test = training.standardize(X_test, x_train_mean, x_train_std)
 #-----------------------------------------------------------------------------------------------------------------------
 
 #--------------------------------------------------Training Model-------------------------------------------------------
-step = 0
 
 training_start = time.time()
 
-for e in range(epochs):
-    # shuffle / rebuild mini‑batches each epoch
-    mini_batches = training.make_mini_batches(X_train, Y_train, mini_batch_size)
-    epoch_losses = []
-    print(f"epoch {e+1}/{epochs}")
+losses = model.fit(X_train, Y_train,
+                   
+                   # it will use 'batch_size' number
+                   # of examples per example
+                   batch_size=mini_batch_size, 
+                   epochs=epochs,  # total epoch
 
-    for x_batch, y_batch in mini_batches:
-        step += 1
-        # batches already standardized in make_mini_batches
-        output = network.predict(x_batch)
-        batch_loss = final_loss.mse(output, y_batch)
-        epoch_losses.append(batch_loss)
-
-        grad = final_loss.mse_prime(output, y_batch)
-        network.backprop(grad, step)
-
-    avg = np.mean(epoch_losses)
-    losses.append(avg)
-    if (e+1) % 10 == 0 or e == 0:
-        print(f"  avg mse {avg:.4f}")
-
+                   )
 
 training_end = time.time()
 
@@ -109,31 +90,36 @@ training_time = training_end - training_start
 
 #----------------------------------------------Plotting Data----------------------------------------------------------
 # evaluate on original scale
-prediction = network.predict(X_train)
+prediction = model.predict(X_train)
 prediction = training.destandardize(prediction, y_train_mean, y_train_std)
-training_loss = final_loss.root_mse(prediction, training.destandardize(Y_train, y_train_mean, y_train_std))
+Y_train = training.destandardize(Y_train, y_train_mean, y_train_std)
+training_loss = keras.metrics.mean_squared_error(Y_train.reshape((Y_train.shape[0], )), prediction.reshape((prediction.shape[0], )))
 
-prediction_test = network.predict(X_test)
+print(Y_train.shape)
+print(training_loss)
+prediction_test = model.predict(X_test)
 prediction_test = training.destandardize(prediction_test, y_train_mean, y_train_std)
-test_loss = final_loss.root_mse(prediction_test, Y_test)
+test_loss = keras.metrics.mean_squared_error(Y_test, prediction_test.reshape((prediction_test.shape[0], )))
+print(test_loss)
 
-print("training time, in seconds: ", training_time)
-print("training loss", training_loss)
-print("test loss", test_loss)
-print("avg prediction", prediction.mean(), "avg target", Y_train.mean(), "\n")
-print("prediction head", prediction[:5].flatten())
-print("target head", Y_train[:5].flatten())
+print("training time, in seconds:", training_time)
+print("training loss", training_loss.numpy())
+print("test loss", test_loss.numpy())
+print("avg prediction", prediction_test.mean(), "avg target", Y_test.mean(), "\n")
+print("prediction head", prediction_test[:5].flatten())
+print("target head", Y_test[:5].flatten())
 
 plt.figure()
 plt.title("losses over time")
 plt.xlabel("epochs")
 plt.ylabel("losses")
-plt.plot(losses)  # losses
-
+plt.plot(losses.history['loss'], label='Training Loss') 
+plt.legend()
 plt.figure()
 
-scatter_data = np.hstack((X_train[:, 6], X_train[:, 7]))
-scatter_data = np.hstack((prediction.reshape(prediction.shape[0], 1), scatter_data))
+scatter_data = np.hstack((X_test[:, 6].T.reshape((X_test[:, 6].T.shape + (1, ))), X_test[:, 7].T.reshape((X_test[:, 7].T.shape + (1, )))))
+
+scatter_data = np.hstack((prediction_test, scatter_data))
 scatter_data = pd.DataFrame(scatter_data, index=None, columns=["preds", "Latitude", "Longitude"])
 
 sns.scatterplot(

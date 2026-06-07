@@ -1,5 +1,5 @@
 import numpy as np
-import layers.convolutional_layer as convolutional_layer
+import layers.python_layers.convolutional_layer as convolutional_layer
 import scipy
 import max_pooling_layer
 import relu

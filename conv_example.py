@@ -5,7 +5,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.datasets import mnist
 import matplotlib.pyplot as plt
 
-from layers.convolutional_layer import ConvLayer
+from layers.python_layers.convolutional_layer import ConvLayer
 from max_pooling_layer import MaxPoolingLayer
 from max_pooling_layer import MaxPoolingLayer
 from relu import ReLu

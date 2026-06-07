@@ -1,7 +1,7 @@
 import numpy as np
 import copy, math
 
-from weight_layer import WeightLayer
+from layers.python_layers.weight_layer import WeightLayer
 
 # each filter contains d many kernels
 # using this as a guide: https://learnopencv.com/understanding-convolutional-neural-networks-cnn/

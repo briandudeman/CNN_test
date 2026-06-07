@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from layer import Layer
+from layers.python_layers.layer import Layer
 
 class Reshape(Layer): # reshaping for fc layers
 

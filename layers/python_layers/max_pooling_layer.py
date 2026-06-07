@@ -1,7 +1,7 @@
 import numpy as np
 
 
-from layer import Layer
+from layers.python_layers.layer import Layer
 
 
 class MaxPoolingLayer(Layer):

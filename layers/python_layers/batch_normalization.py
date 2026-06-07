@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from layers.layer import Layer
+from layers.python_layers.layer import Layer
 
 class BatchNormalization(Layer):
 
@@ -29,7 +29,7 @@ class BatchNormalization(Layer):
         return self.out
 
 
-    def backward(self, dLdZ, epoch):
+    def backward(self, dLdZ, step):
         self.dLdX = np.zeros(self.input.shape)
         self.dLdG = np.sum(np.multiply(self.normalized, dLdZ), axis=0)
         self.dLdB = np.sum(dLdZ, axis=0)
