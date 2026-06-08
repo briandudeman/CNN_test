@@ -1,0 +1,6 @@
+
+
+class FCLayer : public WeightLayer {
+    
+
+}
