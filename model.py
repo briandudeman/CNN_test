@@ -1,8 +1,8 @@
 
 
-from layers.layer import Layer
-from layers.weight_layer import WeightLayer
-from optimizers.base_optimizer import BaseOptimizer
+from layers.python_layers.layer import Layer
+from layers.python_layers.weight_layer import WeightLayer
+from optimizers.python_optimizers.base_optimizer import BaseOptimizer
 
 
 import copy
