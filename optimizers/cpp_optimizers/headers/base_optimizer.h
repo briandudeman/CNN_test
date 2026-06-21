@@ -1,6 +1,7 @@
 #ifndef BASE_OPTIMIZER
 #define BASE_OPTIMIZER
 
+#include <Eigen/Dense>
 
 
 class BaseOptimizer {
@@ -12,7 +13,9 @@ public:
         m_lr = lr;
     };
 
-    virtual void backward() = 0;
+    virtual ~BaseOptimizer() {};
+
+    virtual Eigen::MatrixXd backward(Eigen::MatrixXd grad, int step) = 0;
 
 };
 #endif

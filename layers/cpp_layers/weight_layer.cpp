@@ -1,6 +1,6 @@
 
 #include "headers/weight_layer.h"
-#include "c++_optimizers/headers/base_optimizer.h"
+#include "cpp_optimizers/headers/base_optimizer.h"
 
 class WeightLayer : public Layer {
 public:
