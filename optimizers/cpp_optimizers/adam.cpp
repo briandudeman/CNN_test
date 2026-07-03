@@ -6,17 +6,16 @@
 #include "headers/adam.h"
 
 using Eigen::MatrixXd;
+using namespace std;
 
 Adam::Adam(double lr, double beta_one, double beta_two, double epsilon) : BaseOptimizer(lr) {
     m_beta_one = beta_one;
     m_beta_two = beta_two;
     m_epsilon = epsilon;
-    m_m = MatrixXd(0, 0);
-    m_v = MatrixXd(0, 0);
 };
 
 MatrixXd Adam::backward(MatrixXd grad, int step) {
-    if ((m_m.rows() == 0 && m_m.cols() == 0) && (m_v.rows() == 0 && m_v.cols() == 0)) {
+    if (!m_m.has_value()) {
         m_m = MatrixXd::Zero(grad.rows(), grad.cols());
         m_v = MatrixXd::Zero(grad.rows(), grad.cols());
     }

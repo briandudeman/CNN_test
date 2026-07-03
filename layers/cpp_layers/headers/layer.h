@@ -4,7 +4,6 @@
 class Layer{
 public:
 
-    Layer();
 
     virtual void forward() = 0;
 

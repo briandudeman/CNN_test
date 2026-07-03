@@ -11,7 +11,8 @@ class FCLayer(WeightLayer):
     def __init__(self, num_nodes):
       # being fed through(batch size)
       self.m = num_nodes  # number of nodes
-      self.called_first_time = False
+      self.weights = None
+      self.biases = None
       super().__init__()
 
     def forward(self, input):
@@ -19,8 +20,7 @@ class FCLayer(WeightLayer):
       #print("input shape", input.shape)
       self.p, self.d, self.n = input.shape  # p is batch size, d is number of dimensions to the data and n is the number of data points
 
-      if not self.called_first_time:
-        self.called_first_time = True
+      if not self.weights:
         self.x_limit = math.sqrt((2 / (self.n + self.m)))
         self.weights = np.random.uniform(-self.x_limit, self.x_limit, size=(self.m, self.d))  # d by m
         self.biases = np.random.uniform(-self.x_limit, self.x_limit, size=(self.m, 1))
