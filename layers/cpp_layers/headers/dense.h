@@ -1,17 +1,17 @@
 #ifndef FCLAYER
 #define FCLAYER
 
-
+#include <optional>
 #include <Eigen/Dense>
+
 
 #include "weight_layer.h"
 
 using Eigen::MatrixXd;
 
-
-
 class FCLayer : public WeightLayer {
 public:
+
 
     FCLayer(int num_nodes);
 
@@ -22,11 +22,10 @@ public:
 protected:
 
     int m_m;
-    MatrixXd m_weights;
-    MatrixXd m_biases;
+    std::optional<MatrixXd> m_weights;
+    std::optional<MatrixXd> m_biases;
 
     MatrixXd m_input;
-    int m_p;
     int m_d;
     int m_n;
     float m_x_limit;
@@ -39,5 +38,5 @@ protected:
     MatrixXd m_dLdW0;
 
 
-}   
+};
 #endif
