@@ -8,14 +8,14 @@
 class WeightLayer : public Layer {
 public:
 
-    BaseOptimizer *m_optimizer_weights;
-    BaseOptimizer *m_optimizer_biases;
+    std::unique_ptr<BaseOptimizer> m_optimizer_weights;
+    std::unique_ptr<BaseOptimizer> m_optimizer_biases;
 
 
-    template <typename BaseOptimizer, typename... Args>
-    void set_optimizer(BaseOptimizer optimizer, Args... args) {
-        m_optimizer_weights = optimizer(args...);
-        m_optimizer_biases = optimizer(args...);
+    template <typename OptimizerType, typename... Args>
+    void set_optimizer(Args... args) {
+        m_optimizer_weights = std::make_unique<OptimizerType>(args...);
+        m_optimizer_biases = std::make_unique<OptimizerType>(args...);
     };
 };
 

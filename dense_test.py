@@ -20,8 +20,7 @@ import math
 
 #----------------------------------------------Preprocessing data-------------------------------------------------------
 
-data = fetch_california_housing()
-california_housing = fetch_california_housing(as_frame=True)
+data = fetch_california_housing(data_home="C:\\Users\\Stick\\programming_projects\\CNN_from_scratch\\CNN_test")
 X, Y = data["data"], data["target"]
 X_train,X_test,Y_train,Y_test = train_test_split(X, Y, test_size = 0.2)
 

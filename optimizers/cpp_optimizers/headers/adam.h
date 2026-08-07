@@ -2,8 +2,6 @@
 #define ADAM
 
 
-#include <optional>
-
 #include "base_optimizer.h"
 
 class Adam : public BaseOptimizer {
@@ -14,8 +12,9 @@ public:
     Eigen::MatrixXd backward(Eigen::MatrixXd grad, int step);
 
 protected:
-    std::optional<Eigen::MatrixXd> m_m;
-    std::optional<Eigen::MatrixXd> m_v;
+    Eigen::MatrixXd m_m;
+    Eigen::MatrixXd m_v;
+    bool m_initialized;
 
     double m_beta_one;
     double m_beta_two;
