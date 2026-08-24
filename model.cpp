@@ -13,7 +13,7 @@ MatrixXd Model::predict(MatrixXd input) {
     MatrixXd output = input;
 
     for (auto& l: m_layers) {
-        output = l.forward(output);
+        output = l->forward(output);
     };
 
     return output;
@@ -22,8 +22,8 @@ MatrixXd Model::predict(MatrixXd input) {
 
 void Model::backprop(MatrixXd grad, int epoch) {
 
-    for (auto& l = m_layers.rbegin(); l != m_layers.rend(); ++l) {
-        grad = l.backward(grad, epoch, lr=l.m_lr);
+    for (auto l = m_layers.rbegin(); l != m_layers.rend(); ++l) {
+        grad = (*l)->backward(grad, epoch, (*l)->m_lr);
     };
 };
 

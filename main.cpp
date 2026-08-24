@@ -9,6 +9,7 @@
 #include "layers/cpp_layers/headers/relu.h"
 #include "layers/cpp_layers/headers/layer.h"
 #include "model.h"
+#include "utils/cpp_utils/headers/training.h"
 
 using Eigen::MatrixXd;
 using Eigen::RowVectorXd;
@@ -58,9 +59,14 @@ int main() {
         dataset.row(i) = RowVectorXd::Map(dataset_vec[i].data(), cols);
     }
 
-    cout << dataset.rows() << endl;
-    cout << dataset.cols() << endl;
+    //cout << dataset.rows() << endl;
+    //cout << dataset.cols() << endl;
 
+    MatrixXd standardized_data = standardize(dataset);
+    MatrixXd destandardized_data = destandardize(dataset);
+
+    //cout << standardized_data.rowwise().maxCoeff() << endl;
+    //cout << destandardized_data.rowwise().maxCoeff() << endl;
     vector<std::unique_ptr<Layer>> model_vec;
 
     model_vec.push_back(std::make_unique<FCLayer>(50));
