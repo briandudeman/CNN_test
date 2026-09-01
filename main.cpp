@@ -17,6 +17,9 @@ using namespace std;
 
 int main() {
 
+
+    int y_col = 9;
+
     string filename{"housing.csv"};
     ifstream input{filename};
 
@@ -30,6 +33,7 @@ int main() {
     string line;
     getline(input, line); // ignoring first line with strings
 
+    // reading dataset
     for (;getline(input, line);) {
         istringstream ss(move(line));
 
@@ -58,13 +62,19 @@ int main() {
     for (int i = 0; i < rows; i++) {
         dataset.row(i) = RowVectorXd::Map(dataset_vec[i].data(), cols);
     }
+    
+    MatrixXd x = remove_column(dataset, y_col);
+    MatrixXd y = dataset.col(y_col - 1);
 
+
+    make_mini_batches(x, y, 32);
     //cout << dataset.rows() << endl;
     //cout << dataset.cols() << endl;
 
     MatrixXd standardized_data = standardize(dataset);
     MatrixXd destandardized_data = destandardize(dataset);
 
+    //cout << dataset.rowwise().maxCoeff() << endl;
     //cout << standardized_data.rowwise().maxCoeff() << endl;
     //cout << destandardized_data.rowwise().maxCoeff() << endl;
     vector<std::unique_ptr<Layer>> model_vec;
