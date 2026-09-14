@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <iostream>
 #include <optional>
+#include "../../../layers/cpp_layers/headers/layer.h"
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -17,5 +18,7 @@ MatrixXd destandardize(MatrixXd data, std::optional<VectorXd> mean = std::nullop
 vector<vector<MatrixXd>> make_mini_batches(MatrixXd x, MatrixXd y, int batch_size);
 
 MatrixXd remove_column(MatrixXd& matrix, int col);
+
+MatrixXd predict(vector<std::unique_ptr<Layer>> model, MatrixXd input);
 
 #endif

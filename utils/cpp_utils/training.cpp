@@ -79,17 +79,12 @@ vector<vector<MatrixXd>> make_mini_batches(MatrixXd x, MatrixXd y, int batch_siz
     perm.setIdentity();
     std::shuffle(perm.indices().data(), perm.indices().data()+perm.indices().size(), g);
     data = perm * data;
-    
-    cout << data.rows() / batch_size << endl;
-    cout << data.rows() << endl;
-    int counter = 0;
+
     for (int i = 0; i <= data.rows() / batch_size; i++) {
         MatrixXd mini_batch  = data.block(i * batch_size, 0, (data.rows() - i * batch_size), data.cols() - 1);
         if (i != data.rows() / batch_size) {
             mini_batch = data.block(i * batch_size, 0, batch_size, data.cols() - 1);
-            counter += batch_size;
         }
-        cout << i << endl;
         //cout << mini_batch.cols() << endl;
         //cout << mini_batch.rows() << endl;
         
@@ -101,6 +96,7 @@ vector<vector<MatrixXd>> make_mini_batches(MatrixXd x, MatrixXd y, int batch_siz
         vector<MatrixXd> pair = {x_mini, y_mini};
         mini_batches.push_back(pair);
     }
-    cout << "counter" << counter << endl;
     return mini_batches;
 }
+
+

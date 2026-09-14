@@ -9,6 +9,7 @@
 #include "layers/cpp_layers/headers/relu.h"
 #include "layers/cpp_layers/headers/layer.h"
 #include "model.h"
+#include "mse.h"
 #include "utils/cpp_utils/headers/training.h"
 
 using Eigen::MatrixXd;
@@ -66,6 +67,9 @@ int main() {
     MatrixXd x = remove_column(dataset, y_col);
     MatrixXd y = dataset.col(y_col - 1);
 
+    MatrixXd y_test = MatrixXd::Zero(y.rows(), y.cols());
+    cout << Mse::root_mse(y_test, y);
+
 
     make_mini_batches(x, y, 32);
     //cout << dataset.rows() << endl;
@@ -89,6 +93,14 @@ int main() {
 
     Model model = Model::create<Adam>(model_vec, 0.00001);
 
+    int e = 0;
+    int epochs = 1000;
+    int step = 0;
+    int mini_batch_size = 32;
+
+    //while (e < epochs) {
+
+    //}
 
     return 0;
 }
